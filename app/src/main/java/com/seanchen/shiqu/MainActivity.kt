@@ -1,24 +1,26 @@
 package com.seanchen.shiqu
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.imageview.ShapeableImageView
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -28,34 +30,37 @@ class MainActivity : AppCompatActivity() {
     private lateinit var maleButton: TextView
     private lateinit var femaleButton: TextView
     private lateinit var birthdayView: TextView
+    private lateinit var nicknameEditText: EditText
+
+    private var selectedGender = GENDER_MALE
+    private var selectedAvatarUri: Uri? = null
+    private var pendingCameraUri: Uri? = null
 
     private val birthdayCalendar = Calendar.getInstance()
     private val birthdayFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
 
-    // 相册启动器
     private val galleryLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val imageUri = result.data?.data
-        if (result.resultCode == RESULT_OK && imageUri != null) {
+        ActivityResultContracts.OpenDocument()
+    ) { imageUri ->
+        if (imageUri != null) {
+            contentResolver.takePersistableUriPermission(
+                imageUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            selectedAvatarUri = imageUri
             avatarView.setImageURI(imageUri)
         }
     }
 
-    // 相机启动器
     private val cameraLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK){
-            @Suppress("DEPRECATION")
-            val bitmap = result.data?.extras?.get("data") as? Bitmap
-            if (bitmap != null) {
-                avatarView.setImageBitmap(bitmap)
-            }
+        ActivityResultContracts.TakePicture()
+    ) { saved ->
+        if (saved) {
+            selectedAvatarUri = pendingCameraUri
+            avatarView.setImageURI(pendingCameraUri)
         }
     }
 
-    // 获取相册权限
     private val galleryPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -90,15 +95,23 @@ class MainActivity : AppCompatActivity() {
         maleButton = findViewById(R.id.btnMale)
         femaleButton = findViewById(R.id.btnFemale)
         birthdayView = findViewById(R.id.tvBirthday)
+        nicknameEditText = findViewById(R.id.etNickname)
+
+        loadSavedInformation()
+        setupGenderSelector()
+        setupBirthdayPicker()
+        setupAvatarPicker()
+        setupBackButton()
+        setupDoneButton()
     }
 
     private fun setupGenderSelector(){
         maleButton.setOnClickListener { selectGender(isMale = true) }
         femaleButton.setOnClickListener { selectGender(isMale = false) }
-        selectGender(isMale = true)
     }
 
     private fun selectGender(isMale: Boolean) {
+        selectedGender = if (isMale) GENDER_MALE else GENDER_FEMALE
         maleButton.setBackgroundResource(
             if (isMale){
                 R.drawable.bg_gender_selected
@@ -160,7 +173,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun requestCameraPermission(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             openCamera()
@@ -170,18 +182,83 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openGallery(){
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        galleryLauncher.launch(intent)
+        galleryLauncher.launch(arrayOf("image/*"))
     }
 
-    // 开启相机
-    @SuppressLint("QueryPermissionsNeeded")
     private fun openCamera(){
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        if (intent.resolveActivity(packageManager) != null){
-            cameraLauncher.launch(intent)
+        val imageUri = createCameraImageUri()
+        if (imageUri != null) {
+            pendingCameraUri = imageUri
+            cameraLauncher.launch(imageUri)
         } else {
-            Toast.makeText(this, "未找到可用相机", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "创建照片文件失败", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun createCameraImageUri(): Uri? {
+        val imageDir = File(cacheDir, "images").apply { mkdirs() }
+        val imageFile = File.createTempFile("avatar_", ".jpg", imageDir)
+        return FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            imageFile
+        )
+    }
+
+    private fun setupBackButton() {
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun setupDoneButton() {
+        findViewById<TextView>(R.id.btnDone).setOnClickListener {
+            saveInformation()
+        }
+    }
+
+    private fun saveInformation() {
+        val nickname = nicknameEditText.text.toString().trim()
+        if (nickname.isEmpty()) {
+            Toast.makeText(this, "请输入昵称", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .edit()
+            .putString(KEY_NICKNAME, nickname)
+            .putString(KEY_GENDER, selectedGender)
+            .putString(KEY_BIRTHDAY, birthdayView.text.toString())
+            .putString(KEY_AVATAR_URI, selectedAvatarUri?.toString())
+            .apply()
+
+        Toast.makeText(this, "信息已保存", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun loadSavedInformation() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        nicknameEditText.setText(prefs.getString(KEY_NICKNAME, nicknameEditText.text.toString()))
+        birthdayView.text = prefs.getString(KEY_BIRTHDAY, birthdayView.text.toString())
+        runCatching {
+            birthdayCalendar.time = birthdayFormatter.parse(birthdayView.text.toString()) ?: birthdayCalendar.time
+        }
+
+        val savedAvatarUri = prefs.getString(KEY_AVATAR_URI, null)
+        if (!savedAvatarUri.isNullOrEmpty()) {
+            selectedAvatarUri = Uri.parse(savedAvatarUri)
+            avatarView.setImageURI(selectedAvatarUri)
+        }
+
+        selectGender(prefs.getString(KEY_GENDER, GENDER_MALE) == GENDER_MALE)
+    }
+
+    companion object {
+        private const val PREFS_NAME = "edit_information"
+        private const val KEY_NICKNAME = "nickname"
+        private const val KEY_GENDER = "gender"
+        private const val KEY_BIRTHDAY = "birthday"
+        private const val KEY_AVATAR_URI = "avatar_uri"
+        private const val GENDER_MALE = "male"
+        private const val GENDER_FEMALE = "female"
     }
 }

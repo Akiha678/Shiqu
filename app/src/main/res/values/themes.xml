@@ -7,7 +7,7 @@
 
     <style name="Theme.Shiqu" parent="Base.Theme.Shiqu" />
 
-    <style name="ShapeAppearanceOverlay.Shiqu.CircleImageView">
+    <style name="EditInfoCircleImageView">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>

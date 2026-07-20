@@ -14,7 +14,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="14dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="5dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="返回"
         android:padding="12dp"
@@ -27,7 +27,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="5dp"
         android:gravity="center"
         android:text="编辑信息"
         android:textColor="@color/edit_info_text_primary"
@@ -41,14 +41,15 @@
         android:id="@+id/ivAvatar"
         android:layout_width="110dp"
         android:layout_height="110dp"
-        android:layout_marginTop="174dp"
+        android:layout_marginTop="104dp"
         android:contentDescription="头像"
         android:scaleType="centerCrop"
         android:src="@drawable/avatar_preview"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Shiqu.CircleImageView" />
+        app:shapeAppearanceOverlay="@style/EditInfoCircleImageView" />
 
     <TextView
         android:id="@+id/tvChangeAvatar"
@@ -64,13 +65,13 @@
 
     <TextView
         android:id="@+id/btnMale"
-        android:layout_width="136dp"
+        android:layout_width="100dp"
         android:layout_height="56dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="76dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="40dp"
         android:background="@drawable/bg_gender_selected"
         android:gravity="center"
-        android:text="👦  男生"
+        android:text="男生"
         android:textColor="@color/edit_info_gender_text"
         android:textSize="21sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -78,12 +79,12 @@
 
     <TextView
         android:id="@+id/btnFemale"
-        android:layout_width="136dp"
+        android:layout_width="100dp"
         android:layout_height="56dp"
         android:layout_marginEnd="50dp"
         android:background="@drawable/bg_gender_unselected"
         android:gravity="center"
-        android:text="👧  女生"
+        android:text="女生"
         android:textColor="@color/edit_info_gender_text"
         android:textSize="21sp"
         app:layout_constraintBottom_toBottomOf="@id/btnMale"
@@ -130,13 +131,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         android:text="你的生日"
         android:textColor="@color/edit_info_text_primary"
         android:textSize="22sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etNickname" />
 
@@ -166,7 +168,7 @@
         android:layout_height="58dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="70dp"
+        android:layout_marginBottom="36dp"
         android:background="@drawable/bg_edit_info_done"
         android:elevation="7dp"
         android:gravity="center"
@@ -176,5 +178,6 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

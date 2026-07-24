@@ -24,6 +24,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.core.content.edit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var avatarView: ShapeableImageView
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var birthdayView: TextView
     private lateinit var nicknameEditText: EditText
 
+    // 记录用户当前选择的状态，点击“完成”时统一保存。
     private var selectedGender = GENDER_MALE
     private var selectedAvatarUri: Uri? = null
     private var pendingCameraUri: Uri? = null
@@ -39,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private val birthdayCalendar = Calendar.getInstance()
     private val birthdayFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
 
+    // 相册选择
     private val galleryLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { imageUri ->
@@ -52,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 相机启动器
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { saved ->
@@ -61,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 获取相册权限
     private val galleryPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -71,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 获取相机权限
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -91,6 +97,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        // 绑定XML点击事件
         avatarView = findViewById(R.id.ivAvatar)
         maleButton = findViewById(R.id.btnMale)
         femaleButton = findViewById(R.id.btnFemale)
@@ -105,7 +112,8 @@ class MainActivity : AppCompatActivity() {
         setupDoneButton()
     }
 
-    private fun setupGenderSelector(){
+    // 性别选择
+    private fun setupGenderSelector() {
         maleButton.setOnClickListener { selectGender(isMale = true) }
         femaleButton.setOnClickListener { selectGender(isMale = false) }
     }
@@ -113,7 +121,7 @@ class MainActivity : AppCompatActivity() {
     private fun selectGender(isMale: Boolean) {
         selectedGender = if (isMale) GENDER_MALE else GENDER_FEMALE
         maleButton.setBackgroundResource(
-            if (isMale){
+            if (isMale) {
                 R.drawable.bg_gender_selected
             } else {
                 R.drawable.bg_gender_unselected
@@ -121,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         femaleButton.setBackgroundResource(
-            if (isMale){
+            if (isMale) {
                 R.drawable.bg_gender_unselected
             } else {
                 R.drawable.bg_gender_selected
@@ -129,6 +137,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // 生日选择
     private fun setupBirthdayPicker() {
         birthdayView.setOnClickListener {
             DatePickerDialog(
@@ -144,15 +153,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 头像区域
     private fun setupAvatarPicker() {
         avatarView.setOnClickListener { showAvatarOptions() }
         findViewById<TextView>(R.id.tvChangeAvatar).setOnClickListener { showAvatarOptions() }
     }
 
-    private fun showAvatarOptions(){
+    // 头像来源弹窗
+    private fun showAvatarOptions() {
         MaterialAlertDialogBuilder(this)
-            .setItems(arrayOf("从相册选择", "拍照")){ _, which ->
-                when(which) {
+            .setItems(arrayOf("从相册选择", "拍照")) { _, which ->
+                when (which) {
                     0 -> requestGalleryPermission()
                     1 -> requestCameraPermission()
                 }
@@ -160,8 +171,9 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun requestGalleryPermission(){
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+    // Android 13 及以上使用 READ_MEDIA_IMAGES，低版本使用 READ_EXTERNAL_STORAGE。
+    private fun requestGalleryPermission() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -173,7 +185,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestCameraPermission(){
+    // 拍照前检查 CAMERA 权限，没有权限就触发系统授权弹窗。
+    private fun requestCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             openCamera()
         } else {
@@ -181,11 +194,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openGallery(){
+    // 打开系统文件选择器
+    private fun openGallery() {
         galleryLauncher.launch(arrayOf("image/*"))
     }
 
-    private fun openCamera(){
+    private fun openCamera() {
         val imageUri = createCameraImageUri()
         if (imageUri != null) {
             pendingCameraUri = imageUri
@@ -195,6 +209,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // FileProvider
     private fun createCameraImageUri(): Uri? {
         val imageDir = File(cacheDir, "images").apply { mkdirs() }
         val imageFile = File.createTempFile("avatar_", ".jpg", imageDir)
@@ -205,18 +220,21 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // 返回按钮
     private fun setupBackButton() {
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
             finish()
         }
     }
 
+    // 完成按钮
     private fun setupDoneButton() {
         findViewById<TextView>(R.id.btnDone).setOnClickListener {
             saveInformation()
         }
     }
 
+    // 保存前先校验昵称
     private fun saveInformation() {
         val nickname = nicknameEditText.text.toString().trim()
         if (nickname.isEmpty()) {
@@ -225,20 +243,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .edit()
-            .putString(KEY_NICKNAME, nickname)
-            .putString(KEY_GENDER, selectedGender)
-            .putString(KEY_BIRTHDAY, birthdayView.text.toString())
-            .putString(KEY_AVATAR_URI, selectedAvatarUri?.toString())
-            .apply()
+            .edit {
+                putString(KEY_NICKNAME, nickname)
+                    .putString(KEY_GENDER, selectedGender)
+                    .putString(KEY_BIRTHDAY, birthdayView.text.toString())
+                    .putString(KEY_AVATAR_URI, selectedAvatarUri?.toString())
+            }
 
         Toast.makeText(this, "信息已保存", Toast.LENGTH_SHORT).show()
     }
 
+    // 本地化存储
     private fun loadSavedInformation() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         nicknameEditText.setText(prefs.getString(KEY_NICKNAME, nicknameEditText.text.toString()))
         birthdayView.text = prefs.getString(KEY_BIRTHDAY, birthdayView.text.toString())
+
+        // 同步 Calendar 的时间，确保下一次打开日期选择器时默认日期正确。
         runCatching {
             birthdayCalendar.time = birthdayFormatter.parse(birthdayView.text.toString()) ?: birthdayCalendar.time
         }

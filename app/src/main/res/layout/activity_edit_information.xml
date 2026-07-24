@@ -9,6 +9,7 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
+    <!-- 顶部导航区：返回按钮和居中标题。 -->
     <ImageButton
         android:id="@+id/btnBack"
         android:layout_width="48dp"
@@ -37,6 +38,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 头像区 -->
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/ivAvatar"
         android:layout_width="110dp"
@@ -63,6 +65,7 @@
         app:layout_constraintStart_toStartOf="@id/ivAvatar"
         app:layout_constraintTop_toBottomOf="@id/ivAvatar" />
 
+    <!-- 性别选择区 -->
     <TextView
         android:id="@+id/btnMale"
         android:layout_width="100dp"
@@ -91,6 +94,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnMale" />
 
+    <!-- 昵称输入 -->
     <TextView
         android:id="@+id/tvNicknameLabel"
         android:layout_width="0dp"
@@ -126,6 +130,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvNicknameLabel" />
 
+    <!-- 生日选择 -->
     <TextView
         android:id="@+id/tvBirthdayLabel"
         android:layout_width="0dp"
@@ -162,6 +167,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvBirthdayLabel" />
 
+    <!-- 底部 -->
     <TextView
         android:id="@+id/btnDone"
         android:layout_width="0dp"
